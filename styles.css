@@ -1,0 +1,124 @@
+/* Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+/* Container */
+.container {
+    position: relative;
+    width: 860px;
+    max-width: 100vw;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0, 150, 255, 0.1);
+    background: #000;
+}
+
+/* Video feed (hidden behind canvas) */
+video {
+    width: 100%;
+    display: block;
+    transform: scaleX(-1); /* Mirror for natural selfie view */
+}
+
+/* Canvas overlay */
+canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* So clicks pass through to buttons */
+}
+
+/* Filter Controls */
+.controls {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    padding: 12px 20px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.filter-btn {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 18px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    letter-spacing: 0.3px;
+}
+
+.filter-btn:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.filter-btn.active {
+    background: rgba(0, 150, 255, 0.25);
+    color: #fff;
+    border-color: #0096ff;
+    box-shadow: 0 0 30px rgba(0, 150, 255, 0.15);
+}
+
+/* Status Display */
+.status {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 12px;
+    font-family: 'Courier New', monospace;
+    text-align: right;
+    z-index: 10;
+    pointer-events: none;
+    line-height: 1.6;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Mobile Responsive */
+@media (max-width: 600px) {
+    .controls {
+        bottom: 16px;
+        padding: 10px 14px;
+        gap: 6px;
+        border-radius: 30px;
+    }
+    .filter-btn {
+        font-size: 11px;
+        padding: 6px 12px;
+    }
+    .status {
+        font-size: 10px;
+        top: 10px;
+        right: 12px;
+    }
+}
