@@ -29,7 +29,7 @@ Just allow camera access, make a finger frame with both hands, and watch the mag
 
 A browser-based real-time video effect tool that detects your hands using **MediaPipe** and applies creative filters inside the frame created by your fingers—just like the viral TikTok/Instagram trend—but with **gesture controls and video recording** built in!
 
-**No app to install, no account to create—just your browser and your webcam.**
+**<div align="center">No app to install, no account to create — just your browser and your webcam.</div>**
 
 ---
 
@@ -65,15 +65,6 @@ A browser-based real-time video effect tool that detects your hands using **Medi
 - Record your creation with one gesture
 - Export as `.webm` video file
 - Download directly from the browser
-
-### 🎨 Modern UI
-- Sidebar filter list (outside the camera frame)
-- Glass-morphism design
-- Real-time FPS counter
-- Hand detection status
-- Gesture feedback display
-- Recording indicator
-- Fully responsive (mobile-friendly!)
 
 ---
 
@@ -152,22 +143,6 @@ A browser-based real-time video effect tool that detects your hands using **Medi
 - Keep your hands at a comfortable distance (about arms' length)
 - The frame works best when your hands form a rectangle
 - Use the FPS counter to check performance
-
----
-
-### 📂 Project Structure
-
-```
-Finger-Effect/
-├── index.html          # Main HTML structure
-├── styles.css          # Modern glass-morphism UI
-├── script.js           # Core logic (MediaPipe + Canvas + Gestures + Recording)
-├── assets/
-│   └── demo.gif        # Demo animation (optional)
-├── .gitignore          # Git ignore rules
-├── LICENSE             # MIT License
-└── README.md           # This file
-```
 
 ---
 
