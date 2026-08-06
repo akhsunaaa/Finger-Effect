@@ -5,7 +5,7 @@ const CONFIG = {
     videoWidth: 1280,
     videoHeight: 720,
     maxHands: 2,
-    modelComplexity: 1, // 0 = Lite, 1 = Full
+    modelComplexity: 1,
     minDetectionConfidence: 0.7,
     minTrackingConfidence: 0.6,
 };
@@ -18,6 +18,10 @@ const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const fpsDisplay = document.getElementById('fps');
 const handsStatus = document.getElementById('hands-status');
+
+// Offscreen canvas for filter rendering
+const offscreenCanvas = document.createElement('canvas');
+const offCtx = offscreenCanvas.getContext('2d');
 
 let currentFilter = 'none';
 let frameCount = 0;
@@ -73,7 +77,7 @@ hands.onResults((results) => {
 });
 
 // ============================================================
-// CAMERA UTILITY (connects video feed to MediaPipe)
+// CAMERA UTILITY
 // ============================================================
 const camera = new Camera(video, {
     onFrame: async () => {
@@ -88,25 +92,51 @@ const camera = new Camera(video, {
 // MAIN DRAW LOOP
 // ============================================================
 function drawFrame() {
-    // --- 1. Draw the raw video (mirrored) ---
+    // --- 1. Draw raw video (mirrored) as background ---
     ctx.save();
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     ctx.restore();
 
-    // --- 2. Calculate finger frame from landmarks ---
+    // --- 2. Calculate finger frame ---
     const framePoints = calculateFingerFrame(handLandmarks);
 
     if (framePoints && framePoints.length === 4) {
-        // --- 3. Apply filter inside the frame ---
-        applyFilterInsideFrame(framePoints);
+        // --- 3. Render filtered version to offscreen canvas ---
+        offscreenCanvas.width = canvas.width;
+        offscreenCanvas.height = canvas.height;
 
-        // --- 4. Draw the outline + corner dots ---
+        // Draw mirrored video onto offscreen
+        offCtx.save();
+        offCtx.translate(canvas.width, 0);
+        offCtx.scale(-1, 1);
+        offCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        offCtx.restore();
+
+        // Apply filter to offscreen canvas pixel data
+        const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+        applyFilterToData(imageData.data, currentFilter);
+        offCtx.putImageData(imageData, 0, 0);
+
+        // --- 4. Draw the filtered offscreen canvas only inside the finger frame ---
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(framePoints[0].x, framePoints[0].y);
+        for (let i = 1; i < framePoints.length; i++) {
+            ctx.lineTo(framePoints[i].x, framePoints[i].y);
+        }
+        ctx.closePath();
+        ctx.clip();
+
+        ctx.drawImage(offscreenCanvas, 0, 0);
+        ctx.restore();
+
+        // --- 5. Draw outline + corner dots ---
         drawFrameOutline(framePoints);
     }
 
-    // --- 5. Update FPS counter ---
+    // --- 6. Update FPS ---
     frameCount++;
     const now = performance.now();
     if (now - lastFpsUpdate > 1000) {
@@ -122,13 +152,11 @@ function drawFrame() {
 function calculateFingerFrame(landmarks) {
     if (landmarks.length < 2) return null;
 
-    // Determine which hand is left vs right (based on wrist position)
     const leftHand = landmarks.find((h) => isLeftHand(h));
     const rightHand = landmarks.find((h) => !isLeftHand(h));
 
     if (!leftHand || !rightHand) return null;
 
-    // Landmark indices: 4 = thumb tip, 8 = index finger tip
     const leftThumb = leftHand[4];
     const leftIndex = leftHand[8];
     const rightThumb = rightHand[4];
@@ -139,58 +167,24 @@ function calculateFingerFrame(landmarks) {
     const w = canvas.width;
     const h = canvas.height;
 
-    // Convert normalized coordinates (0-1) to pixel coordinates
-    // NOTE: We mirror X-axis (1 - x) to match the mirrored video
     return [
-        { x: (1 - leftThumb.x) * w, y: leftThumb.y * h },   // Top-left
-        { x: (1 - rightThumb.x) * w, y: rightThumb.y * h }, // Top-right
-        { x: (1 - rightIndex.x) * w, y: rightIndex.y * h }, // Bottom-right
-        { x: (1 - leftIndex.x) * w, y: leftIndex.y * h },   // Bottom-left
+        { x: (1 - leftThumb.x) * w, y: leftThumb.y * h },
+        { x: (1 - rightThumb.x) * w, y: rightThumb.y * h },
+        { x: (1 - rightIndex.x) * w, y: rightIndex.y * h },
+        { x: (1 - leftIndex.x) * w, y: leftIndex.y * h },
     ];
 }
 
 function isLeftHand(landmarks) {
-    // Wrist is landmark[0]. If x < 0.5, it's the left hand (in mirrored view)
     return landmarks[0].x < 0.5;
 }
 
 // ============================================================
-// FILTER APPLICATION (Inside the finger frame)
+// FILTER APPLIER (on pixel data array)
 // ============================================================
-function applyFilterInsideFrame(points) {
-    if (!points || points.length < 4) return;
-
-    ctx.save();
-
-    // --- 1. Clip to the finger frame quadrilateral ---
-    ctx.beginPath();
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) {
-        ctx.lineTo(points[i].x, points[i].y);
-    }
-    ctx.closePath();
-    ctx.clip();
-
-    // --- 2. Re-draw the video inside the clipped region ---
-    ctx.save();
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    ctx.restore();
-
-    // --- 3. Apply the selected filter to the clipped region ---
-    applyFilter(ctx, canvas.width, canvas.height, currentFilter);
-
-    ctx.restore();
-}
-
-// ============================================================
-// FILTER DEFINITIONS
-// ============================================================
-function applyFilter(ctx, w, h, filter) {
-    // Get pixel data from the canvas
-    const imageData = ctx.getImageData(0, 0, w, h);
-    const data = imageData.data;
+function applyFilterToData(data, filter) {
+    const w = canvas.width;
+    const h = canvas.height;
 
     switch (filter) {
         case 'grayscale':
@@ -254,24 +248,20 @@ function applyFilter(ctx, w, h, filter) {
             break;
 
         case 'glitch':
-            // RGB split effect
             const tempData = new Uint8ClampedArray(data);
             const offset = 6;
             for (let i = 0; i < data.length; i += 4) {
                 if (i + offset * 4 < data.length && i - offset * 4 >= 0) {
-                    data[i] = tempData[i + offset * 4]; // Red channel shifted right
-                    data[i + 2] = tempData[i - offset * 4]; // Blue channel shifted left
+                    data[i] = tempData[i + offset * 4];
+                    data[i + 2] = tempData[i - offset * 4];
                 }
             }
             break;
 
-        // 'none' filter does nothing
+        // 'none' does nothing
         default:
             break;
     }
-
-    // Put the modified pixels back on the canvas
-    ctx.putImageData(imageData, 0, 0);
 }
 
 // ============================================================
@@ -282,8 +272,7 @@ function drawFrameOutline(points) {
 
     ctx.save();
 
-    // --- Animated "marching ants" dashed line ---
-    const dashOffset = (Date.now() / 50) % 16; // Animate the dashes
+    const dashOffset = (Date.now() / 50) % 16;
     ctx.strokeStyle = 'rgba(0, 150, 255, 0.8)';
     ctx.lineWidth = 2.5;
     ctx.setLineDash([8, 8]);
@@ -297,9 +286,7 @@ function drawFrameOutline(points) {
     ctx.closePath();
     ctx.stroke();
 
-    // --- Glowing corner dots ---
     points.forEach((p) => {
-        // Outer glow
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 15);
         gradient.addColorStop(0, 'rgba(0, 150, 255, 0.6)');
         gradient.addColorStop(1, 'rgba(0, 150, 255, 0)');
@@ -308,13 +295,11 @@ function drawFrameOutline(points) {
         ctx.arc(p.x, p.y, 15, 0, Math.PI * 2);
         ctx.fill();
 
-        // Core dot
         ctx.fillStyle = '#0096ff';
         ctx.beginPath();
         ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
         ctx.fill();
 
-        // Inner highlight
         ctx.fillStyle = 'rgba(255,255,255,0.4)';
         ctx.beginPath();
         ctx.arc(p.x - 1.5, p.y - 1.5, 1.5, 0, Math.PI * 2);
@@ -350,5 +335,4 @@ async function init() {
     }
 }
 
-// Start the app when the page loads
 init();
