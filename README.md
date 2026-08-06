@@ -186,7 +186,6 @@ This project is open source and available under the **MIT License**. See the [LI
 ---
 
 ## 📬 Contact
-
 <a href="mailto:anu723jain@gmail.com"><img alt="Email" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/353812/google-gmail.svg"/></a>
 
 <a href="https://www.linkedin.com/in/anushka-jain5674"><img alt="Linkedin" width="30px" style="padding-right:10px;" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg"/></a>
