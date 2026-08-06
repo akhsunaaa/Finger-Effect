@@ -7,32 +7,94 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-    <div class="container">
-        <!-- Webcam video (hidden behind canvas) -->
-        <video id="webcam" autoplay playsinline muted></video>
-        
-        <!-- Canvas where all the magic happens -->
-        <canvas id="canvas"></canvas>
-        
-        <!-- Filter Controls -->
-        <div class="controls">
-            <button class="filter-btn active" data-filter="none">Normal</button>
-            <button class="filter-btn" data-filter="grayscale">Grayscale</button>
-            <button class="filter-btn" data-filter="sepia">Sepia</button>
-            <button class="filter-btn" data-filter="invert">Invert</button>
-            <button class="filter-btn" data-filter="pixelate">Pixelate</button>
-            <button class="filter-btn" data-filter="glitch">Glitch</button>
-            <button class="filter-btn" data-filter="thermal">Thermal</button>
-            <button class="filter-btn" data-filter="vignette">Vignette</button>
+    <!-- Main Container -->
+    <div class="app">
+        <!-- Camera Viewport -->
+        <div class="viewport">
+            <video id="webcam" autoplay playsinline muted></video>
+            <canvas id="canvas"></canvas>
+            
+            <!-- Status Overlay -->
+            <div class="status-overlay">
+                <div class="status-item">
+                    <span class="status-label">FPS</span>
+                    <span id="fps" class="status-value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Hands</span>
+                    <span id="hands-status" class="status-value">0</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Gesture</span>
+                    <span id="gesture-status" class="status-value">✋</span>
+                </div>
+            </div>
+
+            <!-- Recording Indicator -->
+            <div id="recording-indicator" class="recording-indicator hidden">
+                <span class="recording-dot"></span>
+                RECORDING
+            </div>
         </div>
-        
-        <!-- Status Display -->
-        <div class="status">
-            <span id="fps">FPS: 0</span>
-            <span id="hands-status">Hands: 0 detected</span>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🎨 Filters</h1>
+                <p class="subtitle">Gesture: ✊ Fist to change</p>
+            </div>
+
+            <div class="filter-list" id="filter-list">
+                <button class="filter-btn active" data-filter="none" data-icon="👁️">
+                    <span class="filter-icon">👁️</span>
+                    <span class="filter-name">Normal</span>
+                </button>
+                <button class="filter-btn" data-filter="grayscale" data-icon="⚪">
+                    <span class="filter-icon">⚪</span>
+                    <span class="filter-name">Grayscale</span>
+                </button>
+                <button class="filter-btn" data-filter="sepia" data-icon="🟫">
+                    <span class="filter-icon">🟫</span>
+                    <span class="filter-name">Sepia</span>
+                </button>
+                <button class="filter-btn" data-filter="invert" data-icon="🔄">
+                    <span class="filter-icon">🔄</span>
+                    <span class="filter-name">Invert</span>
+                </button>
+                <button class="filter-btn" data-filter="pixelate" data-icon="📺">
+                    <span class="filter-icon">📺</span>
+                    <span class="filter-name">Pixelate</span>
+                </button>
+                <button class="filter-btn" data-filter="glitch" data-icon="📡">
+                    <span class="filter-icon">📡</span>
+                    <span class="filter-name">Glitch</span>
+                </button>
+                <button class="filter-btn" data-filter="thermal" data-icon="🔥">
+                    <span class="filter-icon">🔥</span>
+                    <span class="filter-name">Thermal</span>
+                </button>
+                <button class="filter-btn" data-filter="vignette" data-icon="🎭">
+                    <span class="filter-icon">🎭</span>
+                    <span class="filter-name">Vignette</span>
+                </button>
+            </div>
+
+            <div class="sidebar-footer">
+                <button id="record-btn" class="record-btn">
+                    <span class="record-icon">⏺️</span>
+                    <span id="record-text">Record</span>
+                </button>
+                <button id="download-btn" class="download-btn hidden">
+                    <span class="download-icon">⬇️</span>
+                    Download
+                </button>
+                <div class="gesture-hint">
+                    ✊ = Next Filter &nbsp;|&nbsp; ✌️ = Toggle Record
+                </div>
+            </div>
         </div>
     </div>
-    
+
     <!-- Load MediaPipe Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous">
     </script>
@@ -40,7 +102,7 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous">
     </script>
-    
+
     <!-- Your Main Script -->
     <script src="script.js"></script>
 </body>

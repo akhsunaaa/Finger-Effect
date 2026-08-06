@@ -1,4 +1,6 @@
-/* Reset & Base */
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
 * {
     margin: 0;
     padding: 0;
@@ -6,117 +8,415 @@
 }
 
 body {
-    background: #0a0a0a;
+    background: #0a0a0f;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #fff;
     overflow: hidden;
 }
 
-/* Container */
-.container {
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+.app {
+    display: flex;
+    gap: 24px;
+    padding: 20px;
+    max-width: 1400px;
+    width: 100%;
+    height: 100vh;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================================
+   VIEWPORT (Camera Area)
+   ============================================================ */
+.viewport {
     position: relative;
-    width: 860px;
-    max-width: 100vw;
-    border-radius: 16px;
+    flex: 1;
+    max-width: 900px;
+    aspect-ratio: 16 / 9;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 0 60px rgba(0, 150, 255, 0.1);
     background: #000;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 150, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Video feed (hidden behind canvas) */
 video {
     width: 100%;
+    height: 100%;
     display: block;
-    transform: scaleX(-1); /* Mirror for natural selfie view */
+    object-fit: cover;
+    transform: scaleX(-1);
 }
 
-/* Canvas overlay */
 canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* So clicks pass through to buttons */
+    pointer-events: none;
 }
 
-/* Filter Controls */
-.controls {
-    position: absolute;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(12px);
-    padding: 12px 20px;
-    border-radius: 50px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    z-index: 10;
-    pointer-events: auto;
-}
-
-.filter-btn {
-    background: transparent;
-    color: rgba(255, 255, 255, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 8px 18px;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    font-family: inherit;
-    letter-spacing: 0.3px;
-}
-
-.filter-btn:hover {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.05);
-}
-
-.filter-btn.active {
-    background: rgba(0, 150, 255, 0.25);
-    color: #fff;
-    border-color: #0096ff;
-    box-shadow: 0 0 30px rgba(0, 150, 255, 0.15);
-}
-
-/* Status Display */
-.status {
+/* ============================================================
+   STATUS OVERLAY
+   ============================================================ */
+.status-overlay {
     position: absolute;
     top: 16px;
     right: 20px;
-    color: rgba(255, 255, 255, 0.35);
-    font-size: 12px;
-    font-family: 'Courier New', monospace;
-    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
     z-index: 10;
     pointer-events: none;
-    line-height: 1.6;
-    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    text-shadow: 0 0 20px rgba(0, 0, 0, 0.9);
 }
 
-/* Mobile Responsive */
-@media (max-width: 600px) {
-    .controls {
-        bottom: 16px;
-        padding: 10px 14px;
-        gap: 6px;
-        border-radius: 30px;
+.status-item {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    opacity: 0.7;
+}
+
+.status-label {
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 9px;
+}
+
+.status-value {
+    color: #fff;
+    font-weight: 600;
+    min-width: 30px;
+    text-align: right;
+}
+
+#gesture-status {
+    font-size: 16px;
+    min-width: 30px;
+}
+
+/* ============================================================
+   RECORDING INDICATOR
+   ============================================================ */
+.recording-indicator {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 8px 20px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10;
+    animation: pulse-recording 1.5s ease-in-out infinite;
+    box-shadow: 0 0 40px rgba(255, 0, 0, 0.3);
+}
+
+.recording-indicator.hidden {
+    display: none;
+}
+
+.recording-dot {
+    width: 10px;
+    height: 10px;
+    background: #fff;
+    border-radius: 50%;
+    animation: blink-dot 0.8s ease-in-out infinite;
+}
+
+@keyframes pulse-recording {
+    0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+    50% { opacity: 0.85; transform: translateX(-50%) scale(1.02); }
+}
+
+@keyframes blink-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+.sidebar {
+    width: 220px;
+    min-width: 200px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 24px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 40px);
+    max-height: 600px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.sidebar-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-header h1 {
+    font-size: 20px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #0096ff, #00d4ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+}
+
+.subtitle {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    margin-top: 4px;
+    -webkit-text-fill-color: rgba(255, 255, 255, 0.35);
+    font-weight: 400;
+}
+
+/* ============================================================
+   FILTER LIST
+   ============================================================ */
+.filter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.filter-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.filter-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: transparent;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+}
+
+.filter-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: #fff;
+}
+
+.filter-btn.active {
+    background: rgba(0, 150, 255, 0.15);
+    color: #fff;
+    box-shadow: inset 0 0 0 1px rgba(0, 150, 255, 0.2);
+}
+
+.filter-icon {
+    font-size: 18px;
+    width: 28px;
+    text-align: center;
+}
+
+.filter-name {
+    font-size: 13px;
+}
+
+/* ============================================================
+   SIDEBAR FOOTER
+   ============================================================ */
+.sidebar-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.record-btn, .download-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    width: 100%;
+}
+
+.record-btn {
+    background: rgba(255, 0, 0, 0.15);
+    color: #ff4444;
+    border: 1px solid rgba(255, 0, 0, 0.15);
+}
+
+.record-btn:hover {
+    background: rgba(255, 0, 0, 0.25);
+    transform: scale(1.02);
+}
+
+.record-btn.recording {
+    background: rgba(255, 0, 0, 0.3);
+    animation: pulse-record-btn 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-record-btn {
+    0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.1); }
+    50% { box-shadow: 0 0 40px rgba(255, 0, 0, 0.25); }
+}
+
+.download-btn {
+    background: rgba(0, 150, 255, 0.15);
+    color: #0096ff;
+    border: 1px solid rgba(0, 150, 255, 0.15);
+}
+
+.download-btn:hover {
+    background: rgba(0, 150, 255, 0.25);
+    transform: scale(1.02);
+}
+
+.download-btn.hidden {
+    display: none;
+}
+
+.record-icon, .download-icon {
+    font-size: 16px;
+}
+
+.gesture-hint {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    text-align: center;
+    letter-spacing: 0.3px;
+    padding: 4px 0;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+    .app {
+        flex-direction: column;
+        padding: 12px;
+        gap: 12px;
     }
+
+    .viewport {
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 16 / 9;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: unset;
+        height: auto;
+        max-height: 280px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 16px;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .sidebar-header {
+        width: 100%;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+    }
+
+    .sidebar-header h1 {
+        font-size: 16px;
+    }
+
+    .filter-list {
+        flex-direction: row;
+        flex-wrap: wrap;
+        overflow-x: auto;
+        gap: 4px;
+        flex: none;
+        width: 100%;
+        padding-bottom: 4px;
+    }
+
     .filter-btn {
-        font-size: 11px;
+        width: auto;
         padding: 6px 12px;
+        font-size: 12px;
+        flex-shrink: 0;
     }
-    .status {
+
+    .filter-icon {
+        font-size: 14px;
+        width: 20px;
+    }
+
+    .sidebar-footer {
+        flex-direction: row;
+        width: 100%;
+        margin-top: 4px;
+        padding-top: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .record-btn, .download-btn {
+        width: auto;
+        padding: 8px 16px;
+        font-size: 12px;
+        flex: 1;
+        min-width: 80px;
+    }
+
+    .gesture-hint {
+        width: 100%;
+        font-size: 9px;
+    }
+
+    .status-overlay {
         font-size: 10px;
         top: 10px;
         right: 12px;
