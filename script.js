@@ -258,6 +258,41 @@ function applyFilterToData(data, filter) {
             }
             break;
 
+        case 'thermal':
+            for (let i = 0; i < data.length; i += 4) {
+                const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
+                const t = brightness / 255;
+                if (t < 0.33) {
+                    data[i] = 0;
+                    data[i+1] = t * 3 * 255;
+                    data[i+2] = 255;
+                } else if (t < 0.66) {
+                    data[i] = (t - 0.33) * 3 * 255;
+                    data[i+1] = 255;
+                    data[i+2] = 255 - (t - 0.33) * 3 * 255;
+                } else {
+                    data[i] = 255;
+                    data[i+1] = 255 - (t - 0.66) * 3 * 255;
+                    data[i+2] = 0;
+                }
+            }
+            break;
+
+        case 'vignette':
+            const cx = w / 2, cy = h / 2;
+            const maxDist = Math.sqrt(cx*cx + cy*cy);
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    const dist = Math.sqrt((x - cx)*(x - cx) + (y - cy)*(y - cy));
+                    const factor = 1 - (dist / maxDist) * 0.7;
+                    data[idx] *= factor;
+                    data[idx+1] *= factor;
+                    data[idx+2] *= factor;
+                }
+            }
+            break;
+
         // 'none' does nothing
         default:
             break;
