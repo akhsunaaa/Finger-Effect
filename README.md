@@ -195,8 +195,7 @@ This project is open source and available under the **MIT License**. See the [LI
 
 <a href="https://www.threads.net/@_anu723_"> <img alt="Twitter/X" width="30px" style="padding-right:10px;" src="https://raw.githubusercontent.com/akhsunaaa/akhsunaaa/e41e1ef82ba2d745d08562caa24a8b6b7821df5c/threads-app-icon.svg" /></a>
 
-<a href="https://pin.it/2jFTU0XO7"><img alt="Pinterest" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/354183/pinterest.svg"/></a> &emsp;
-<img src="https://profile-counter.glitch.me/anu723jain/count.svg"/>
+<a href="https://pin.it/2jFTU0XO7"><img alt="Pinterest" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/354183/pinterest.svg"/></a>
 </p>
 
 ---
