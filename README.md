@@ -35,15 +35,14 @@ A browser-based real-time video effect tool that detects your hands using **Medi
 
 ## 📺 Inspiration
 
-Inspired by the viral TikTok/Instagram finger-frame trend, this project 
-was built with **MediaPipe** for real-time hand tracking - no AI API 
-calls required, all processing happens locally in your browser!
+Inspired by the viral TikTok/Instagram finger-frame trend, this project was built with **MediaPipe** for real-time hand tracking — no AI API calls required, all processing happens locally in your browser!
 
 ---
 
 ## ✨ Features
 
-### 🎨 8 Visual Filters
+### 🎨 13 Visual Filters
+
 | Filter | Description |
 | :--- | :--- |
 | 👁️ **Normal** | No filter applied |
@@ -54,8 +53,14 @@ calls required, all processing happens locally in your browser!
 | 📡 **Glitch** | RGB split distortion |
 | 🔥 **Thermal** | Heatmap style (blue → yellow → red) |
 | 🎭 **Vignette** | Darkened edges for cinematic look |
+| 💥 **Comic** | Pop-art posterization (4 bold colors) |
+| 📐 **Grid** | Blueprint style with mixed line weights |
+| 🎨 **Duotone** | Navy → Violet → Pink gradient map |
+| 🪟 **Glass** | Frosted glass effect with blur |
+| 💡 **Neon** | Dark background + glowing edge detection |
 
 ### 🎮 Gesture Controls (Hands-Free!)
+
 | Gesture | Action |
 | :--- | :--- |
 | ✊ **Fist** | Switch to next filter |
@@ -64,12 +69,14 @@ calls required, all processing happens locally in your browser!
 | 👍 **Thumbs Up** | Visual feedback (no action) |
 
 ### ⌨️ Keyboard Shortcuts
+
 | Key | Action |
 | :--- | :--- |
 | `Space` or `→` | Next filter |
 | `R` | Toggle recording |
 
 ### 📹 Recording & Export
+
 - Record your creation with one gesture
 - Export as `.webm` video file
 - Download directly from the browser
@@ -114,10 +121,6 @@ calls required, all processing happens locally in your browser!
 └─────────────────────────────────────────────────────────────┘
 ```
 
-
----
-
-
 ---
 
 ## 🛠️ Tech Stack
@@ -147,10 +150,28 @@ calls required, all processing happens locally in your browser!
 8. **Make peace sign again** to stop and download your video
 
 ### Pro Tips
+
 - Good lighting improves hand tracking dramatically
 - Keep your hands at a comfortable distance (about arms' length)
 - The frame works best when your hands form a rectangle
 - Use the FPS counter to check performance
+- **Neon filter** works best with high-contrast scenes (your face against a wall)
+
+---
+
+## 📂 Project Structure
+
+```
+Finger-Effect/
+├── index.html          # Main HTML structure
+├── styles.css          # Modern glass-morphism UI
+├── script.js           # Core logic (MediaPipe + Canvas + Gestures + Recording)
+├── assets/
+│   └── demo.gif        # Demo animation (optional)
+├── .gitignore          # Git ignore rules
+├── LICENSE             # MIT License
+└── README.md           # This file
+```
 
 ---
 
@@ -169,12 +190,14 @@ This project is open source and available under the **MIT License**. See the [LI
 ---
 
 ## 📬 Contact
-<a href="mailto:anu723jain@gmail.com"><img alt="Email" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/353812/google-gmail.svg"/></a>
-<a href="https://www.linkedin.com/in/anushka-jain5674"><img alt="Linkedin" width="30px" style="padding-right:10px;" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg"/></a>
-<a href="https://www.instagram.com/_anu723_"><img alt="Instagram" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/452229/instagram-1.svg"/></a>
-<a href="https://x.com/akhsuna_"><img alt="Twitter/X" width="27px" style="padding-right:10px;" src="https://github.com/akhsunaaa/akhsunaaa/blob/main/logo.svg" /></a>
-<a href="https://www.threads.net/@_anu723_"> <img alt="Twitter/X" width="30px" style="padding-right:10px;" src="https://raw.githubusercontent.com/akhsunaaa/akhsunaaa/e41e1ef82ba2d745d08562caa24a8b6b7821df5c/threads-app-icon.svg" /></a>
-<a href="https://pin.it/2jFTU0XO7"><img alt="Pinterest" width="30px" style="padding-right:10px;" src="https://www.svgrepo.com/show/354183/pinterest.svg"/></a>
+
+<p align="center">
+  <a href="mailto:anu723jain@gmail.com"><img alt="Email" width="30px" src="https://www.svgrepo.com/show/353812/google-gmail.svg"/></a> &nbsp&nbsp&nbsp&nbsp&nbsp
+  <a href="https://www.linkedin.com/in/anushka-jain5674"><img alt="LinkedIn" width="30px" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linkedin/linkedin-original.svg"/></a> &nbsp&nbsp&nbsp&nbsp&nbsp
+  <a href="https://www.instagram.com/_anu723_"><img alt="Instagram" width="30px" src="https://www.svgrepo.com/show/452229/instagram-1.svg"/></a> &nbsp&nbsp&nbsp&nbsp&nbsp
+  <a href="https://x.com/akhsuna_"><img alt="Twitter/X" width="27px" src="https://github.com/akhsunaaa/akhsunaaa/blob/main/logo.svg"/></a> &nbsp&nbsp&nbsp&nbsp&nbsp
+  <a href="https://www.threads.net/@_anu723_"><img alt="Threads" width="30px" src="https://raw.githubusercontent.com/akhsunaaa/akhsunaaa/e41e1ef82ba2d745d08562caa24a8b6b7821df5c/threads-app-icon.svg"/></a> &nbsp&nbsp&nbsp&nbsp&nbsp
+  <a href="https://pin.it/2jFTU0XO7"><img alt="Pinterest" width="30px" src="https://www.svgrepo.com/show/354183/pinterest.svg"/></a>
 </p>
 
 ---
