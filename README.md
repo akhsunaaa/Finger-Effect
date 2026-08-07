@@ -33,6 +33,14 @@ A browser-based real-time video effect tool that detects your hands using **Medi
 
 ---
 
+## 📺 Inspiration
+
+Inspired by the viral TikTok/Instagram finger-frame trend, this project 
+was built with **MediaPipe** for real-time hand tracking - no AI API 
+calls required, all processing happens locally in your browser!
+
+---
+
 ## ✨ Features
 
 ### 🎨 8 Visual Filters
