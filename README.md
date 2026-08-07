@@ -18,7 +18,7 @@
 Just allow camera access, make a finger frame with both hands, and watch the magic happen!
 
 <div align="center">
-  <img src="assets/demo.gif" alt="Pixel Portal Demo" width="700"/>
+  <img src="assets/Video Project 2.gif" alt="Pixel Portal Demo" width="700"/>
   <br>
   <em>Your fingers are the portal to a filtered world ✨</em>
 </div>
