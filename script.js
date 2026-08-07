@@ -363,26 +363,42 @@ function isLeftHand(landmarks) {
 function drawNeonEdges() {
     if (currentFilter !== 'neon') return;
 
-    // Get the finger frame points
     const framePoints = calculateFingerFrame(handLandmarks);
     if (!framePoints || framePoints.length < 4) return;
 
-    // Get the offscreen canvas data (the filtered frame)
     const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
     const w = canvas.width;
     const h = canvas.height;
 
-    // Create a grayscale buffer for edge detection
+    // 1. Convert to grayscale
     const gray = new Float32Array(w * h);
     for (let i = 0; i < data.length; i += 4) {
         gray[i / 4] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
     }
 
-    // Sobel operator - detect edges
-    const edges = new Uint8ClampedArray(w * h);
+    // 2. Gaussian blur (3x3) to reduce noise
+    const blurred = new Float32Array(w * h);
+    const gaussKernel = [1, 2, 1, 2, 4, 2, 1, 2, 1];
+    const gaussSum = 16;
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            let sum = 0;
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const idx = (y + ky) * w + (x + kx);
+                    sum += gray[idx] * gaussKernel[(ky + 1) * 3 + (kx + 1)];
+                }
+            }
+            blurred[y * w + x] = sum / gaussSum;
+        }
+    }
+
+    // 3. Sobel operator - gradient magnitude and direction
     const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
     const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+    const magnitude = new Float32Array(w * h);
+    const direction = new Float32Array(w * h);
 
     for (let y = 1; y < h - 1; y++) {
         for (let x = 1; x < w - 1; x++) {
@@ -390,28 +406,93 @@ function drawNeonEdges() {
             for (let ky = -1; ky <= 1; ky++) {
                 for (let kx = -1; kx <= 1; kx++) {
                     const idx = (y + ky) * w + (x + kx);
-                    const weightX = sobelX[(ky + 1) * 3 + (kx + 1)];
-                    const weightY = sobelY[(ky + 1) * 3 + (kx + 1)];
-                    gx += gray[idx] * weightX;
-                    gy += gray[idx] * weightY;
+                    gx += blurred[idx] * sobelX[(ky + 1) * 3 + (kx + 1)];
+                    gy += blurred[idx] * sobelY[(ky + 1) * 3 + (kx + 1)];
                 }
             }
-            const magnitude = Math.sqrt(gx * gx + gy * gy);
-            edges[y * w + x] = Math.min(255, magnitude);
+            const mag = Math.sqrt(gx * gx + gy * gy);
+            const dir = Math.atan2(gy, gx);
+            magnitude[y * w + x] = mag;
+            direction[y * w + x] = dir;
         }
     }
 
-    // Threshold to get strong edges
-    const threshold = 50;
-    const strongEdges = new Uint8ClampedArray(w * h);
-    for (let i = 0; i < edges.length; i++) {
-        strongEdges[i] = edges[i] > threshold ? 255 : 0;
+    // 4. Non-maximum suppression (thin edges)
+    const suppressed = new Float32Array(w * h);
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const idx = y * w + x;
+            const dir = direction[idx];
+            const mag = magnitude[idx];
+            
+            // Quantize direction to 0, 45, 90, 135 degrees
+            let angle = dir * 180 / Math.PI;
+            if (angle < 0) angle += 180;
+            
+            let neighbor1 = 0, neighbor2 = 0;
+            if (angle < 22.5 || angle >= 157.5) {
+                // Horizontal
+                neighbor1 = magnitude[y * w + (x - 1)];
+                neighbor2 = magnitude[y * w + (x + 1)];
+            } else if (angle >= 22.5 && angle < 67.5) {
+                // Diagonal 45
+                neighbor1 = magnitude[(y - 1) * w + (x + 1)];
+                neighbor2 = magnitude[(y + 1) * w + (x - 1)];
+            } else if (angle >= 67.5 && angle < 112.5) {
+                // Vertical
+                neighbor1 = magnitude[(y - 1) * w + x];
+                neighbor2 = magnitude[(y + 1) * w + x];
+            } else {
+                // Diagonal 135
+                neighbor1 = magnitude[(y - 1) * w + (x - 1)];
+                neighbor2 = magnitude[(y + 1) * w + (x + 1)];
+            }
+            
+            if (mag >= neighbor1 && mag >= neighbor2) {
+                suppressed[idx] = mag;
+            } else {
+                suppressed[idx] = 0;
+            }
+        }
     }
 
-    // Draw neon edges INSIDE the finger frame
+    // 5. Double threshold (hysteresis)
+    const highThreshold = 60;
+    const lowThreshold = 25;
+    const edges = new Uint8ClampedArray(w * h);
+    
+    // First pass: mark strong edges
+    for (let i = 0; i < suppressed.length; i++) {
+        if (suppressed[i] > highThreshold) {
+            edges[i] = 255;
+        }
+    }
+    
+    // Second pass: weak edges connected to strong edges
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            const idx = y * w + x;
+            if (suppressed[idx] > lowThreshold && suppressed[idx] <= highThreshold) {
+                // Check if any neighbor is a strong edge
+                let connected = false;
+                for (let ky = -1; ky <= 1 && !connected; ky++) {
+                    for (let kx = -1; kx <= 1 && !connected; kx++) {
+                        const nIdx = (y + ky) * w + (x + kx);
+                        if (edges[nIdx] === 255) {
+                            connected = true;
+                        }
+                    }
+                }
+                if (connected) {
+                    edges[idx] = 255;
+                }
+            }
+        }
+    }
+
+    // 6. Draw neon edges INSIDE the finger frame
     ctx.save();
 
-    // Clip to finger frame
     ctx.beginPath();
     ctx.moveTo(framePoints[0].x, framePoints[0].y);
     for (let i = 1; i < framePoints.length; i++) {
@@ -420,16 +501,16 @@ function drawNeonEdges() {
     ctx.closePath();
     ctx.clip();
 
-    // Draw neon edge lines
+    // Create edge image
     const edgeData = new ImageData(new Uint8ClampedArray(w * h * 4), w, h);
-    for (let i = 0; i < strongEdges.length; i++) {
+    for (let i = 0; i < edges.length; i++) {
         const idx = i * 4;
-        if (strongEdges[i] > 0) {
-            // Neon pink with glow (R, G, B, A)
+        if (edges[i] > 0) {
+            // Neon pink with glow (R, G, B)
             edgeData.data[idx] = 255;     // R
             edgeData.data[idx + 1] = 80;  // G
             edgeData.data[idx + 2] = 180; // B
-            edgeData.data[idx + 3] = 255; // Alpha
+            edgeData.data[idx + 3] = 255;
         } else {
             edgeData.data[idx] = 0;
             edgeData.data[idx + 1] = 0;
@@ -438,7 +519,6 @@ function drawNeonEdges() {
         }
     }
 
-    // Draw the edges
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = w;
     tempCanvas.height = h;
@@ -450,7 +530,7 @@ function drawNeonEdges() {
     ctx.shadowBlur = 15;
     ctx.drawImage(tempCanvas, 0, 0);
 
-    // Second pass - brighter core lines
+    // Brighter core lines (second pass)
     ctx.shadowBlur = 0;
     ctx.globalCompositeOperation = 'screen';
     ctx.drawImage(tempCanvas, 0, 0);
@@ -657,20 +737,14 @@ function applyFilterToData(data, filter) {
             break;
 
         case 'glass':
-            // Apple-style glassmorphism: frosted white with blue tint
+            // Glassmorphism: frosted glass effect with FULL COLOR
             for (let i = 0; i < data.length; i += 4) {
-                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
-                // Mix with white: 55% original, 45% white
-                let r = avg * 0.55 + 255 * 0.45;
-                let g = avg * 0.55 + 255 * 0.45;
-                let b = avg * 0.55 + 255 * 0.45;
-                // Add slight blue tint
-                r = Math.min(255, r);
-                g = Math.min(255, g);
-                b = Math.min(255, b + 10);
-                data[i] = r;
-                data[i + 1] = g;
-                data[i + 2] = b;
+                // Keep original colors, just brighten and add blue tint
+                const r = data[i], g = data[i + 1], b = data[i + 2];
+                // Mix with white but preserve color
+                data[i] = Math.min(255, r * 0.7 + 255 * 0.3);
+                data[i + 1] = Math.min(255, g * 0.7 + 255 * 0.3);
+                data[i + 2] = Math.min(255, b * 0.7 + 255 * 0.3);
             }
             break;
 
@@ -760,16 +834,33 @@ function drawGridOverlay() {
     const h = canvas.height;
     const step = Math.max(14, Math.floor(w / 18));
 
-    ctx.strokeStyle = 'rgba(215, 200, 180, 0.35)';
-    ctx.lineWidth = 1;
-
+    // Draw grid with mixed line styles
     for (let x = 0; x < w; x += step) {
+        const index = Math.floor(x / step);
+        // Every 4th line is thick and white
+        if (index % 4 === 0) {
+            ctx.strokeStyle = 'rgba(230, 225, 215, 0.6)';
+            ctx.lineWidth = 2;
+        } else {
+            ctx.strokeStyle = 'rgba(215, 200, 180, 0.25)';
+            ctx.lineWidth = 1;
+        }
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
         ctx.stroke();
     }
+
     for (let y = 0; y < h; y += step) {
+        const index = Math.floor(y / step);
+        // Every 4th line is thick and white
+        if (index % 4 === 0) {
+            ctx.strokeStyle = 'rgba(230, 225, 215, 0.6)';
+            ctx.lineWidth = 2;
+        } else {
+            ctx.strokeStyle = 'rgba(215, 200, 180, 0.25)';
+            ctx.lineWidth = 1;
+        }
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
