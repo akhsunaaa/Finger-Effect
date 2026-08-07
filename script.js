@@ -30,8 +30,8 @@ let frameCount = 0;
 let lastFpsUpdate = performance.now();
 let handLandmarks = [];
 let filterIndex = 0;
-const filterNames = ['none', 'grayscale', 'sepia', 'invert', 'pixelate', 'glitch', 'thermal', 'vignette'];
-const filterIcons = ['👁️', '⚪', '🟫', '🔄', '📺', '📡', '🔥', '🎭'];
+const filterNames = ['none', 'grayscale', 'sepia', 'invert', 'pixelate', 'glitch', 'thermal', 'vignette', 'comic', 'grid', 'duotone', 'glass', 'neon'];
+const filterIcons = ['👁️', '⚪', '🟫', '🔄', '📺', '📡', '🔥', '🎭', '💥', '📐', '🎨', '🪟', '💡'];
 
 // Recording
 let mediaRecorder = null;
@@ -282,6 +282,15 @@ function drawFrame() {
         applyFilterToData(imageData.data, currentFilter);
         offCtx.putImageData(imageData, 0, 0);
 
+        // Special handling for Glass filter - apply blur
+        if (currentFilter === 'glass') {
+            // Apply canvas blur filter to the offscreen canvas
+            offCtx.save();
+            offCtx.filter = 'blur(8px)';
+            offCtx.drawImage(offscreenCanvas, 0, 0);
+            offCtx.restore();
+        }
+
         // --- 4. Draw filtered canvas inside finger frame ---
         ctx.save();
         ctx.beginPath();
@@ -296,9 +305,13 @@ function drawFrame() {
 
         // --- 5. Draw outline ---
         drawFrameOutline(framePoints);
+        // --- 6. Draw grid overlay ---
+        drawGridOverlay();
+        // --- 7. Draw neon edges if applicable ---
+        drawNeonEdges();
     }
 
-    // --- 6. Update FPS ---
+    // --- 8. Update FPS ---
     frameCount++;
     const now = performance.now();
     if (now - lastFpsUpdate > 1000) {
@@ -342,6 +355,111 @@ function isLeftHand(landmarks) {
 }
 
 // ============================================================
+// NEON EDGE DETECTION (SIMPLIFIED)
+// ============================================================
+// ============================================================
+// NEON EDGE DETECTION - Real Edge Detection with Sobel
+// ============================================================
+function drawNeonEdges() {
+    if (currentFilter !== 'neon') return;
+
+    // Get the finger frame points
+    const framePoints = calculateFingerFrame(handLandmarks);
+    if (!framePoints || framePoints.length < 4) return;
+
+    // Get the offscreen canvas data (the filtered frame)
+    const imageData = offCtx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const w = canvas.width;
+    const h = canvas.height;
+
+    // Create a grayscale buffer for edge detection
+    const gray = new Float32Array(w * h);
+    for (let i = 0; i < data.length; i += 4) {
+        gray[i / 4] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+    }
+
+    // Sobel operator - detect edges
+    const edges = new Uint8ClampedArray(w * h);
+    const sobelX = [-1, 0, 1, -2, 0, 2, -1, 0, 1];
+    const sobelY = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+
+    for (let y = 1; y < h - 1; y++) {
+        for (let x = 1; x < w - 1; x++) {
+            let gx = 0, gy = 0;
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const idx = (y + ky) * w + (x + kx);
+                    const weightX = sobelX[(ky + 1) * 3 + (kx + 1)];
+                    const weightY = sobelY[(ky + 1) * 3 + (kx + 1)];
+                    gx += gray[idx] * weightX;
+                    gy += gray[idx] * weightY;
+                }
+            }
+            const magnitude = Math.sqrt(gx * gx + gy * gy);
+            edges[y * w + x] = Math.min(255, magnitude);
+        }
+    }
+
+    // Threshold to get strong edges
+    const threshold = 50;
+    const strongEdges = new Uint8ClampedArray(w * h);
+    for (let i = 0; i < edges.length; i++) {
+        strongEdges[i] = edges[i] > threshold ? 255 : 0;
+    }
+
+    // Draw neon edges INSIDE the finger frame
+    ctx.save();
+
+    // Clip to finger frame
+    ctx.beginPath();
+    ctx.moveTo(framePoints[0].x, framePoints[0].y);
+    for (let i = 1; i < framePoints.length; i++) {
+        ctx.lineTo(framePoints[i].x, framePoints[i].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    // Draw neon edge lines
+    const edgeData = new ImageData(new Uint8ClampedArray(w * h * 4), w, h);
+    for (let i = 0; i < strongEdges.length; i++) {
+        const idx = i * 4;
+        if (strongEdges[i] > 0) {
+            // Neon pink with glow (R, G, B, A)
+            edgeData.data[idx] = 255;     // R
+            edgeData.data[idx + 1] = 80;  // G
+            edgeData.data[idx + 2] = 180; // B
+            edgeData.data[idx + 3] = 255; // Alpha
+        } else {
+            edgeData.data[idx] = 0;
+            edgeData.data[idx + 1] = 0;
+            edgeData.data[idx + 2] = 0;
+            edgeData.data[idx + 3] = 0;
+        }
+    }
+
+    // Draw the edges
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = w;
+    tempCanvas.height = h;
+    const tempCtx = tempCanvas.getContext('2d');
+    tempCtx.putImageData(edgeData, 0, 0);
+
+    // Glow effect
+    ctx.shadowColor = 'rgba(255, 80, 180, 0.8)';
+    ctx.shadowBlur = 15;
+    ctx.drawImage(tempCanvas, 0, 0);
+
+    // Second pass - brighter core lines
+    ctx.shadowBlur = 0;
+    ctx.globalCompositeOperation = 'screen';
+    ctx.drawImage(tempCanvas, 0, 0);
+
+    ctx.restore();
+}
+
+
+// ============================================================
 // FILTER APPLIER
 // ============================================================
 function applyFilterToData(data, filter) {
@@ -349,6 +467,9 @@ function applyFilterToData(data, filter) {
     const h = canvas.height;
 
     switch (filter) {
+        // ============================================================
+        // ORIGINAL FILTERS
+        // ============================================================
         case 'grayscale':
             for (let i = 0; i < data.length; i += 4) {
                 const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
@@ -456,6 +577,115 @@ function applyFilterToData(data, filter) {
             }
             break;
 
+        // ============================================================
+        // NEW FIXED EFFECTS (RGBA ORDER)
+        // ============================================================
+
+        case 'grid':
+            // Blueprint style: high contrast + blue tint
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                const enhanced = Math.min(255, gray * 1.15 + 8);
+                // RGB: red = 0.8, green = 0.85, blue = 0.9 of enhanced + base tint
+                data[i] = Math.min(255, enhanced * 0.8 + 15);    // R
+                data[i + 1] = Math.min(255, enhanced * 0.85 + 20); // G
+                data[i + 2] = Math.min(255, enhanced * 0.9 + 30);  // B
+            }
+            break;
+
+        case 'comic':
+            // Pop-art comic: posterize to 4 levels with bold colors
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                // Simple histogram stretch (like cv2.equalizeHist)
+                const equalized = Math.min(255, Math.max(0, (gray - 64) * 1.5 + 64));
+                const level = Math.floor(equalized / 64) * 64;
+                // Bold comic colors (RGB)
+                if (level < 64) {
+                    data[i] = 10;
+                    data[i + 1] = 0;
+                    data[i + 2] = 20;   // near-black
+                } else if (level < 128) {
+                    data[i] = 215;
+                    data[i + 1] = 20;
+                    data[i + 2] = 30;   // red
+                } else if (level < 192) {
+                    data[i] = 255;
+                    data[i + 1] = 140;
+                    data[i + 2] = 30;   // orange
+                } else {
+                    data[i] = 255;
+                    data[i + 1] = 235;
+                    data[i + 2] = 70;   // yellow
+                }
+            }
+            break;
+
+        case 'duotone':
+            // Navy → Violet → Pink gradient map (4 stops)
+            for (let i = 0; i < data.length; i += 4) {
+                const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                const equalized = Math.min(255, Math.max(0, (gray - 64) * 1.5 + 64));
+                const t = equalized / 255;
+                let r, g, b;
+                // Stops in RGB: (10,20,70) -> (120,40,140) -> (235,60,90) -> (255,215,225)
+                if (t < 0.25) {
+                    const lt = t / 0.25;
+                    r = 10 * (1 - lt) + 120 * lt;
+                    g = 20 * (1 - lt) + 40 * lt;
+                    b = 70 * (1 - lt) + 140 * lt;
+                } else if (t < 0.50) {
+                    const lt = (t - 0.25) / 0.25;
+                    r = 120 * (1 - lt) + 235 * lt;
+                    g = 40 * (1 - lt) + 60 * lt;
+                    b = 140 * (1 - lt) + 90 * lt;
+                } else if (t < 0.75) {
+                    const lt = (t - 0.50) / 0.25;
+                    r = 235 * (1 - lt) + 255 * lt;
+                    g = 60 * (1 - lt) + 215 * lt;
+                    b = 90 * (1 - lt) + 225 * lt;
+                } else {
+                    const lt = (t - 0.75) / 0.25;
+                    r = 255;
+                    g = 215 * (1 - lt) + 255 * lt;
+                    b = 225 * (1 - lt) + 255 * lt;
+                }
+                data[i] = Math.min(255, r);
+                data[i + 1] = Math.min(255, g);
+                data[i + 2] = Math.min(255, b);
+            }
+            break;
+
+        case 'glass':
+            // Apple-style glassmorphism: frosted white with blue tint
+            for (let i = 0; i < data.length; i += 4) {
+                const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                // Mix with white: 55% original, 45% white
+                let r = avg * 0.55 + 255 * 0.45;
+                let g = avg * 0.55 + 255 * 0.45;
+                let b = avg * 0.55 + 255 * 0.45;
+                // Add slight blue tint
+                r = Math.min(255, r);
+                g = Math.min(255, g);
+                b = Math.min(255, b + 10);
+                data[i] = r;
+                data[i + 1] = g;
+                data[i + 2] = b;
+            }
+            break;
+
+
+        case 'neon':
+            // Dark background with slight purple/blue tint
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i + 1], b = data[i + 2];
+                const avg = (r + g + b) / 3;
+                data[i] = avg * 0.08 + 10;    // R
+                data[i + 1] = avg * 0.08 + 5; // G
+                data[i + 2] = avg * 0.08 + 20; // B (more blue)
+            }
+            break;
+
         default:
             break;
     }
@@ -502,6 +732,49 @@ function drawFrameOutline(points) {
         ctx.arc(p.x - 1.5, p.y - 1.5, 1.5, 0, Math.PI * 2);
         ctx.fill();
     });
+
+    ctx.restore();
+}
+
+/// ============================================================
+// GRID OVERLAY
+// ============================================================
+function drawGridOverlay() {
+    // Only draw grid for 'grid' filter, not 'neon'
+    if (currentFilter !== 'grid') return;
+
+    const framePoints = calculateFingerFrame(handLandmarks);
+    if (!framePoints || framePoints.length < 4) return;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.moveTo(framePoints[0].x, framePoints[0].y);
+    for (let i = 1; i < framePoints.length; i++) {
+        ctx.lineTo(framePoints[i].x, framePoints[i].y);
+    }
+    ctx.closePath();
+    ctx.clip();
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const step = Math.max(14, Math.floor(w / 18));
+
+    ctx.strokeStyle = 'rgba(215, 200, 180, 0.35)';
+    ctx.lineWidth = 1;
+
+    for (let x = 0; x < w; x += step) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+    }
+    for (let y = 0; y < h; y += step) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+    }
 
     ctx.restore();
 }
