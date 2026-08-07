@@ -759,10 +759,10 @@ function drawGridOverlay() {
         const index = Math.floor(x / step);
         // Every 4th line is thick and white
         if (index % 4 === 0) {
-            ctx.strokeStyle = 'rgba(230, 225, 215, 0.6)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.lineWidth = 2;
         } else {
-            ctx.strokeStyle = 'rgba(215, 200, 180, 0.25)';
+            ctx.strokeStyle = 'rgba(160, 157, 152, 0.5)';
             ctx.lineWidth = 1;
         }
         ctx.beginPath();
@@ -775,10 +775,10 @@ function drawGridOverlay() {
         const index = Math.floor(y / step);
         // Every 4th line is thick and white
         if (index % 4 === 0) {
-            ctx.strokeStyle = 'rgba(230, 225, 215, 0.6)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
             ctx.lineWidth = 2;
         } else {
-            ctx.strokeStyle = 'rgba(215, 200, 180, 0.25)';
+            ctx.strokeStyle = 'rgba(160, 157, 152, 0.5)';
             ctx.lineWidth = 1;
         }
         ctx.beginPath();
