@@ -1,8 +1,8 @@
-# 🖐️ Finger Frame Effects
+# 🖐️ Pixel Portal
 
 > Real-time interactive video effects controlled by your fingers—no buttons needed!
 
-[![Live Demo](https://img.shields.io/badge/🚀_TRY_IT_NOW-Live_Demo-0096ff?style=for-the-badge)](https://akhsunaaa.github.io/Finger-Effect)
+[![Live Demo](https://img.shields.io/badge/🚀_TRY_IT_NOW-Live_Demo-0096ff?style=for-the-badge)](https://akhsunaaa.github.io/Pixel-Portal/)
 [![Made with JavaScript](https://img.shields.io/badge/Made_with-JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Uses MediaPipe](https://img.shields.io/badge/Uses-MediaPipe-00c300?style=for-the-badge)](https://developers.google.com/mediapipe)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
@@ -13,14 +13,14 @@
 
 **No installation. No downloads. Just open and go!**
 
-👉 **[Click here to try the live demo](https://akhsunaaa.github.io/Finger-Effect)**
+👉 **[Click here to try the live demo](https://akhsunaaa.github.io/Pixel-Portal/)**
 
 Just allow camera access, make a finger frame with both hands, and watch the magic happen!
 
 <div align="center">
-  <img src="assets/demo.gif" alt="Finger Frame Effect Demo" width="700"/>
+  <img src="assets/demo.gif" alt="Pixel Portal Demo" width="700"/>
   <br>
-  <em>Create magic with just your fingers ✨</em>
+  <em>Your fingers are the portal to a filtered world ✨</em>
 </div>
 
 ---
@@ -35,7 +35,7 @@ A browser-based real-time video effect tool that detects your hands using **Medi
 
 ## 📺 Inspiration
 
-Inspired by the viral TikTok/Instagram finger-frame trend, this project was built with **MediaPipe** for real-time hand tracking — no AI API calls required, all processing happens locally in your browser!
+Inspired by the viral TikTok/Instagram touchdesigner trend, **Pixel Portal** was built with **MediaPipe** for real-time hand tracking — no AI API calls required, all processing happens locally in your browser!
 
 ---
 
@@ -140,7 +140,7 @@ Inspired by the viral TikTok/Instagram finger-frame trend, this project was buil
 
 ## 🎮 How To Use
 
-1. Open the **[live demo](https://akhsunaaa.github.io/Finger-Effect)**
+1. Open the **[live demo](https://akhsunaaa.github.io/Pixel-Portal/)**
 2. Allow camera access when prompted
 3. **Position your hands** in front of the camera
 4. **Make a finger frame** with both hands (thumbs and index fingers touching)
@@ -162,7 +162,7 @@ Inspired by the viral TikTok/Instagram finger-frame trend, this project was buil
 ## 📂 Project Structure
 
 ```
-Finger-Effect/
+Pixel-Portal/
 ├── index.html          # Main HTML structure
 ├── styles.css          # Modern glass-morphism UI
 ├── script.js           # Core logic (MediaPipe + Canvas + Gestures + Recording)
